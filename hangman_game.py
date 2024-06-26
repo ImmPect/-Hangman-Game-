@@ -17,10 +17,34 @@ class Hadman_game:
         return random.choice(self.word_list)
     
     def update_hangman_canvas(self):
-        self.hangman_canvas.delete("all")  # Clear the canvas for redrawing
+        self.hangman_canvas.delete("all")
         incorrect_guesses_count = len(self.incorrect_guesses)
         if incorrect_guesses_count >= 1:
             self.hangman_canvas.create_line(50, 180, 150, 180)
+
+    def draw_head(self):
+      self.hangman_canvas.create_oval(125, 50, 185, 110, outline="black")
+
+    def draw_body(self):
+        self.hangman_canvas.create_line(155, 110, 155, 170, fill="black")
+
+    def draw_left_arm(self):
+        self.hangman_canvas.create_line(155, 130, 125, 150, fill="black")
+
+    def draw_right_arm(self):
+        self.hangman_canvas.create_line(155, 130, 185, 150, fill="black")
+
+    def draw_left_leg(self):
+        self.hangman_canvas.create_line(155, 170, 125, 200, fill="black")
+
+    def draw_right_leg(self):
+        self.hangman_canvas.create_line(155, 170, 185, 200, fill="black")
+
+    def draw_face(self):
+        self.hangman_canvas.create_line(140, 70, 150, 80, fill="black") # Left eye
+        self.hangman_canvas.create_line(160, 70, 170, 80, fill="black") # Right eye
+    # Draw a sad mouth
+        self.hangman_canvas.create_arc(140, 85, 170, 105, start=0, extent=-180, fill="black")
     
     def guess_letter(self, letter):
         if letter in self.secret_word and letter not in self.correct_guesses:
@@ -33,15 +57,56 @@ class Hadman_game:
         self.update_word_display()
         self.check_game_over()
 
+    def reset_game(self):
+        self.secret_word = self.choose_secret_word()
+        self.correct_guesses = set()
+        self.incorrect_guesses = set()
+        self.attempts_left = 7
+
+        self.hangman_canvas.delete("all")
+        self.update_word_display()
+        
+        for frame in self.buttons_frame.winfo_children():
+            for button in frame.winfo_children():
+                button.configure(state=tk.NORMAL)
+        
+        if hasattr(self, 'game_over_label'):
+            self.game_over_label.destroy()
+
     def update_word_display(self):
         displayed_word = " ".join([letter if letter in self.correct_guesses else "_" for letter in self.secret_word])
         self.word_display.config(text=displayed_word)
+
+    def initialize_gui(self):
+        # Existing GUI setup code...
+        # Add reset game button
+        self.reset_button = tk.Button(self.master, text="Reset Game", command=self.reset_game)
+        self.reset_button.pack(pady=(10, 0))
 
     def check_game_over(self):
         if set(self.secret_word).issubset(self.correct_guesses):
             self.display_game_over_message("Congratulations, you've won!")
         elif self.attempts_left == 0:
             self.display_game_over_message(f"Game over! The word was: {self.secret_word}")
+
+    def reset_game(self):
+        # Re-show the reset button
+        self.reset_button.pack(pady=(10, 0))
+
+        # Reset game state and GUI elements as previously outlined
+        # Hide the game over label and the Restart button when the game is reset
+        if hasattr(self, 'game_over_label') and self.game_over_label.winfo_exists():
+            self.game_over_label.pack_forget()
+        if hasattr(self, 'restart_button') and self.restart_button.winfo_exists():
+            self.restart_button.pack_forget()
+
+        # Ensure the alphabet buttons frame and other interactive elements are visible again
+        self.buttons_frame.pack()
+
+    def initialize_gui(self):
+        # Existing code...
+        self.word_display = tk.Label(self.master, text="_ " * len(self.secret_word), font=("Helvetica", 30), bg='light blue')
+        self.word_display.pack(pady=(40, 20))
 
     def setup_alphabet_buttons(self):
         alphabet = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"
